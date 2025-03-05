@@ -11,23 +11,23 @@
 void init(void) {
     // UBRR calculation from p.154 in ATmega169 manual.
     // XXX: writing high byte is unnecessary with current config.
-    UBRRH = (uint8_t)(UBRRVAL << 8);
-    UBRRL = (uint8_t)(UBRRVAL);
+    UBRR0H = (uint8_t)(UBRRVAL << 8);
+    UBRR0L = (uint8_t)(UBRRVAL);
 
     // Receive and transmit.
-    UCSRB = SET(RXEN)  | SET(TXEN);
+    UCSR0B = SET(RXEN0)  | SET(TXEN0);
     // 8 bit char.
-    UCSRC = SET(UCSZ1) | SET(UCSZ0);
+    UCSR0C = SET(UCSZ01) | SET(UCSZ00);
 }
 
 uint8_t recv(void) {
-    while (!(UCSRA & SET(RXC)));
-    return UDR;
+    while (!(UCSR0A & SET(RXC0)));
+    return UDR0;
 }
 
 void send(uint8_t data) {
-    while (!(UCSRA & SET(UDRE)));
-    UDR = data;
+    while (!(UCSR0A & SET(UDRE0)));
+    UDR0 = data;
 }
 
 int main() {
