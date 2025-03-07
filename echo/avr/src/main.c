@@ -15,7 +15,7 @@ void init(void) {
     UBRR0L = (uint8_t)(UBRRVAL);
 
     // Receive and transmit.
-    UCSR0B = SET(RXEN0)  | SET(TXEN0);
+    UCSR0B = SET(RXEN0)  | SET(TXEN0)  | SET(RXCIE0);
     // 8 bit char.
     UCSR0C = SET(UCSZ01) | SET(UCSZ00);
 }
