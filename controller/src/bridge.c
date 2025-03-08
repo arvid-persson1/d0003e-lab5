@@ -117,6 +117,7 @@ int poll(Bridge *const self, __attribute__((unused)) const int _x) {
     else
         assert(false);
 
+    ASYNC(self->display, print, self);
     AFTER(POLL_TIME, self, poll, 0);
 
     return 0;
