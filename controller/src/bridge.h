@@ -2,8 +2,9 @@
 #define _BRIDGE_H
 
 #include "TinyTimber.h"
+#include "writer.h"
 
-// WARN: Variant order must be preserved for `goingSouth`.
+// NOTE: Variant order must be preserved for `goingSouth`.
 typedef enum {
     OPEN_NORTH,
     CLOSED_NORTH,
@@ -13,14 +14,15 @@ typedef enum {
 
 typedef struct {
     Object super;
-    unsigned int northQueue;
-    unsigned int southQueue;
-    unsigned int onBridge;
-    unsigned int passed;
+    Writer *writer;
+    unsigned int northQueue,
+                 southQueue,
+                 onBridge,
+                 passed;
     State state;
 } Bridge;
 
-#define initBridge() { .super = initObject() }
+#define initBridge(w) { .super = initObject(), .writer = w }
 
 int process(Bridge *const, __attribute__((unused)) const int);
 int poll(Bridge *const, __attribute__((unused)) const int);

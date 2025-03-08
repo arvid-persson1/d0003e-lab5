@@ -6,9 +6,9 @@
 int main() {
     init();
 
-    Bridge b = initBridge();
     Writer w = initWriter();
-    InterruptHandler h = initHandler(&b, &w);
+    Bridge b = initBridge(&w);
+    InterruptHandler h = initHandler(&w, &b);
 
     INSTALL(&h, recv, IRQ_USART0_RX);
     INSTALL(&h, drempty, IRQ_USART0_UDRE);

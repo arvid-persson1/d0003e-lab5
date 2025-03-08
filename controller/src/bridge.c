@@ -2,24 +2,35 @@
 #include "bridge.h"
 #include "common.h"
 
-#define NORTH_ARRIVAL SET(7)
-#define SOUTH_ARRIVAL SET(5)
-
 #define POLL_TIME      SEC(1)
 #define DRIVE_TIME     SEC(5)
 #define PASS_THRESHOLD 10
 
-static bool isSouth(const State s) {
+static inline bool isSouth(const State s) {
     return (int)s & 1;
 }
 
 int process(Bridge *const self, const int arg) {
-    uint8_t udr = (uint8_t)arg;
+    typedef struct {
+        unsigned int northArrival : 1;
+        unsigned int northEntry   : 1;
+        unsigned int southArrival : 1;
+        unsigned int southEntry   : 1;
+        unsigned int _pad         : 4;
+    } SensorRead;
 
-    if (udr & NORTH_ARRIVAL)
+    union {
+        int raw;
+        SensorRead read;
+    } pun = { arg };
+    SensorRead read = pun.read;
+    assert(read._pad == 0);
+
+    if (read.northArrival)
         self->northQueue++;
-    if (udr & SOUTH_ARRIVAL)
+    if (read.southArrival)
         self->southQueue++;
+    // Other cases ignored.
 
     return 0;
 }
@@ -31,17 +42,17 @@ int leave(Bridge *const self, __attribute__((unused)) const int _x) {
     return 0;
 }
 
-static void enter(Bridge *const self, const State direction) {
+static void enter(Bridge *const self) {
     self->onBridge++;
     self->passed++;
     AFTER(DRIVE_TIME, self, leave, 0);
 
-    if (isSouth(direction)) {
+    if (isSouth(self->state)) {
         self->southQueue--;
-        // TODO: usart send
+        ASYNC(self->writer, send, SOUTH_GREEN);
     } else {
         self->northQueue--;
-        // TODO: usart send
+        ASYNC(self->writer, send, NORTH_GREEN);
     }
 }
 
@@ -52,9 +63,11 @@ static void checkSwitch(Bridge *const self) {
     if (self->state == OPEN_NORTH && self->southQueue) {
         self->passed = 0;
         self->state = CLOSED_NORTH;
+        ASYNC(self->writer, send, BOTH_RED);
     } else if (self->state == OPEN_SOUTH && self->northQueue) {
         self->passed = 0;
         self->state = CLOSED_SOUTH;
+        ASYNC(self->writer, send, BOTH_RED);
     }
 }
 
@@ -70,21 +83,23 @@ static void emptyBridge(Bridge *const self) {
             self->passed = 0;
 
         self->state = OPEN_SOUTH;
+    } else {
+        return;
     }
 
-    enter(self, self->state);
+    enter(self);
 }
 
 static void goingNorth(Bridge *const self) {
     if (self->northQueue)
-        enter(self, self->state);
+        enter(self);
     else if (self->southQueue)
         self->state = CLOSED_NORTH;
 }
 
 static void goingSouth(Bridge *const self) {
     if (self->southQueue)
-        enter(self, self->state);
+        enter(self);
     else if (self->northQueue)
         self->state = CLOSED_SOUTH;
 }
@@ -92,7 +107,7 @@ static void goingSouth(Bridge *const self) {
 int poll(Bridge *const self, __attribute__((unused)) const int _x) {
     checkSwitch(self);
 
-    if (self->onBridge == 0) 
+    if (!self->onBridge) 
         emptyBridge(self);
     else if (self->state == OPEN_NORTH)
         goingNorth(self);

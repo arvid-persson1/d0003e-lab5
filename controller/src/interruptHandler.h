@@ -7,13 +7,13 @@
 
 typedef struct {
     Object super;
-    Bridge *bridge;
     Writer *writer;
+    Bridge *bridge;
 } InterruptHandler;
 
-#define initHandler(b, w) { initObject(), b, w }
+#define initHandler(w, b) { initObject(), w, b }
 
-int recv(const InterruptHandler *const, __attribute__((unused)) const int);
 int drempty(const InterruptHandler *const, __attribute__((unused)) const int);
+int recv(const InterruptHandler *const, __attribute__((unused)) const int);
 
 #endif
