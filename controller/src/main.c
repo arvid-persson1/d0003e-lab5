@@ -1,15 +1,17 @@
 #include "TinyTimber.h"
 #include "interruptHandler.h"
 #include "bridge.h"
-#include "init.h"
+#include "common.h"
 
 int main() {
     init();
 
     Bridge b = initBridge();
-    InterruptHandler h = initHandler(&b);
+    Writer w = initWriter();
+    InterruptHandler h = initHandler(&b, &w);
 
-    INSTALL(&h, handle, IRQ_USART0_RX);
+    INSTALL(&h, recv, IRQ_USART0_RX);
+    INSTALL(&h, drempty, IRQ_USART0_UDRE);
 
     return TINYTIMBER(&b, poll, 0);
 }

@@ -1,5 +1,4 @@
-#include <avr/io.h>
-#include "init.h"
+#include "common.h"
 
 #define FOSC 8000000
 #define BAUD 9600
@@ -16,11 +15,11 @@ void init(void) {
 
     // UBRR calculation from p.154 in ATmega169 manual.
     // XXX: writing high byte is unnecessary with current config.
-    UBRR0H = (uint8_t)(UBRRVAL << 8);
-    UBRR0L = (uint8_t)(UBRRVAL);
+    UBRRH = (uint8_t)(UBRRVAL << 8);
+    UBRRL = (uint8_t)(UBRRVAL);
 
     // Receive and transmit.
-    UCSR0B = SET(RXEN0)  | SET(TXEN0)  | SET(RXCIE0);
+    UCSRB = SET(RXEN)  | SET(TXEN)  | SET(RXCIE);
     // 8 bit char.
-    UCSR0C = SET(UCSZ01) | SET(UCSZ00);
+    UCSRC = SET(UCSZ1) | SET(UCSZ0);
 }

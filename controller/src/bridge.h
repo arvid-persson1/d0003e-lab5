@@ -3,6 +3,7 @@
 
 #include "TinyTimber.h"
 
+// WARN: Variant order must be preserved for `goingSouth`.
 typedef enum {
     OPEN_NORTH,
     CLOSED_NORTH,
@@ -23,6 +24,5 @@ typedef struct {
 
 int process(Bridge *const, __attribute__((unused)) const int);
 int poll(Bridge *const, __attribute__((unused)) const int);
-int leave(Bridge *const, __attribute__((unused)) const int);
 
 #endif
