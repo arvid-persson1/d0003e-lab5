@@ -19,7 +19,7 @@ typedef struct {
                  southQueue,
                  onBridge,
                  passed;
-    State state;
+    State state : 2;
 } Bridge;
 
 #define initBridge(w) { .super = initObject(), .writer = w }

@@ -9,18 +9,19 @@ typedef struct {
     Object super;
     // TODO: add buffer slots?
     uint8_t buf;
-    unsigned int stored : 1,
-                 ready  : 1;
+    bool stored : 1,
+         ready  : 1;
 } Writer;
 
 #define initWriter() { .super = initObject() }
 
 typedef struct {
-    unsigned int northGreen : 1,
-                 northRed   : 1,
-                 southGreen : 1,
-                 southRed   : 1,
-                 _pad       : 4;
+    bool northGreen : 1,
+         northRed   : 1,
+         southGreen : 1,
+         southRed   : 1;
+    // TODO: remove.
+    unsigned int _pad : 4;
 } LightStatus;
 
 union _WritePun {

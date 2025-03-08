@@ -12,11 +12,12 @@ static inline bool isSouth(const State s) {
 
 int process(Bridge *const self, const int arg) {
     typedef struct {
-        unsigned int northArrival : 1;
-        unsigned int northEntry   : 1;
-        unsigned int southArrival : 1;
-        unsigned int southEntry   : 1;
-        unsigned int _pad         : 4;
+        bool northArrival : 1,
+             northEntry   : 1,
+             southArrival : 1,
+             southEntry   : 1;
+        // TODO: remove.
+        unsigned int _pad : 4;
     } SensorRead;
 
     union {
