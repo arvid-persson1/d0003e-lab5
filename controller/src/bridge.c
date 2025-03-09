@@ -50,10 +50,10 @@ static void enter(Bridge *const self) {
 
     if (isSouth(self->state)) {
         self->southQueue--;
-        ASYNC(self->writer, send, SOUTH_GREEN);
+        SYNC(self->writer, send, SOUTH_GREEN);
     } else {
         self->northQueue--;
-        ASYNC(self->writer, send, NORTH_GREEN);
+        SYNC(self->writer, send, NORTH_GREEN);
     }
 }
 
@@ -64,11 +64,11 @@ static void checkSwitch(Bridge *const self) {
     if (self->state == OPEN_NORTH && self->southQueue) {
         self->passed = 0;
         self->state = CLOSED_NORTH;
-        ASYNC(self->writer, send, BOTH_RED);
+        SYNC(self->writer, send, BOTH_RED);
     } else if (self->state == OPEN_SOUTH && self->northQueue) {
         self->passed = 0;
         self->state = CLOSED_SOUTH;
-        ASYNC(self->writer, send, BOTH_RED);
+        SYNC(self->writer, send, BOTH_RED);
     }
 }
 
@@ -117,7 +117,8 @@ int poll(Bridge *const self, __attribute__((unused)) const int _x) {
     else
         assert(false);
 
-    ASYNC(self->display, print, self);
+    // TODO: `print` doesn't always have to be called here.
+    SYNC(self->display, print, self);
     AFTER(POLL_TIME, self, poll, 0);
 
     return 0;
