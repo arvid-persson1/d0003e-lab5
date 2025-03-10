@@ -13,6 +13,7 @@ typedef struct {
          ready  : 1;
 } Writer;
 
-#define initWriter() { .super = initObject() }
+// TODO: is the writer initially ready?
+#define initWriter() { .super = initObject(), .stored = false, .ready = true }
 
 #endif

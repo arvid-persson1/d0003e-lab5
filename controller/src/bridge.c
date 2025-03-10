@@ -6,10 +6,6 @@
 #define DRIVE_TIME     SEC(5)
 #define PASS_THRESHOLD 10
 
-static inline bool isSouth(const State s) {
-    return (int)s & 1;
-}
-
 int process(Bridge *const self, const int arg) {
     typedef struct {
         bool northArrival : 1,
@@ -33,7 +29,7 @@ int process(Bridge *const self, const int arg) {
         self->southQueue++;
     // Other cases ignored.
 
-    SYNC(self->display, print, self);
+    ASYNC(self->display, print, self);
 
     return 0;
 }
@@ -42,81 +38,59 @@ int leave(Bridge *const self, __attribute__((unused)) const int _x) {
     assert(self->onBridge);
     self->onBridge--;
 
-    SYNC(self->display, print, self);
+    ASYNC(self->display, print, self);
 
     return 0;
 }
 
-static void checkSwitch(Bridge *const self) {
-    if (self->state == OPEN_NORTH && self->southQueue) {
-        self->passed = 0;
-        self->state = CLOSED_NORTH;
-        SYNC(self->writer, send, BOTH_RED);
-    } else if (self->state == OPEN_SOUTH && self->northQueue) {
-        self->passed = 0;
-        self->state = CLOSED_SOUTH;
-        SYNC(self->writer, send, BOTH_RED);
-    }
-}
-
 static void enter(Bridge *const self) {
+    self->open = true;
     self->onBridge++;
-    self->passed++;
     AFTER(DRIVE_TIME, self, leave, 0);
 
-    if (isSouth(self->state)) {
-        self->southQueue--;
-        SYNC(self->writer, send, SOUTH_GREEN);
-    } else {
+    if (self->direction == NORTH) {
         self->northQueue--;
-        SYNC(self->writer, send, NORTH_GREEN);
-    }
-
-    SYNC(self->display, print, self);
-}
-
-static void emptyBridge(Bridge *const self) {
-    // TODO: fairness
-    if (self->northQueue) {
-        if (isSouth(self->state))
-            self->passed = 0;
-
-        self->state = OPEN_NORTH;
-    } else if (self->southQueue) {
-        if (!isSouth(self->state))
-            self->passed = 0;
-
-        self->state = OPEN_SOUTH;
+        ASYNC(self->writer, send, NORTH_GREEN);
     } else {
-        return;
+        self->southQueue--;
+        ASYNC(self->writer, send, SOUTH_GREEN);
     }
 
-    enter(self);
-}
-
-static void goingNorth(Bridge *const self) {
-    if (self->northQueue)
-        enter(self);
-    else if (self->southQueue)
-        self->state = CLOSED_NORTH;
-}
-
-static void goingSouth(Bridge *const self) {
-    if (self->southQueue)
-        enter(self);
-    else if (self->northQueue)
-        self->state = CLOSED_SOUTH;
+    ASYNC(self->display, print, self);
 }
 
 int poll(Bridge *const self, __attribute__((unused)) const int _x) {
-    if (self->passed >= PASS_THRESHOLD)
-        checkSwitch(self);
-    else if (!self->onBridge) 
-        emptyBridge(self);
-    else if (self->state == OPEN_NORTH)
-        goingNorth(self);
-    else if (self->state == OPEN_SOUTH)
-        goingSouth(self);
+    bool switchReady = self->passed < PASS_THRESHOLD;
+    unsigned int *activeQueue, *waitQueue;
+    if (self->direction == SOUTH) {
+        activeQueue = &self->southQueue;
+        waitQueue   = &self->northQueue;
+    } else {
+        activeQueue = &self->northQueue;
+        waitQueue   = &self->southQueue;
+    }
+
+    if (!self->onBridge) {
+        if (!self->northQueue || self->direction == NORTH && self->southQueue) {
+            self->direction = SOUTH;
+            self->passed = 1;
+            enter(self);
+        } else if (!self->southQueue || self->direction == SOUTH && self->northQueue) {
+            self->direction = NORTH;
+            self->passed = 1;
+            enter(self);
+        }
+        // both sides empty, pass
+    } else if (switchReady && *waitQueue) {
+        self->open = false;
+        ASYNC(self->writer, send, BOTH_RED);
+    } else if (self->open && *activeQueue && (!switchReady || !*waitQueue)) {
+        self->passed++;
+        enter(self);
+    } else {
+        // TODO: are there other cases?
+        assert(!self->onBridge && (!self->open || !*activeQueue));
+    }
 
     AFTER(POLL_TIME, self, poll, 0);
 
