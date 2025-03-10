@@ -43,12 +43,12 @@ static void writeDigit(const uint_fast8_t digit, const uint_fast8_t pos) {
 int print(__attribute__((unused)) const Display *const self, const int arg) {
     Bridge *bridge = (Bridge*)arg;
 
-    writeDigit(bridge->northQueue % 100, 0);
-    writeDigit(bridge->northQueue % 10,  1);
-    writeDigit(bridge->southQueue % 100, 2);
-    writeDigit(bridge->southQueue % 10,  3);
-    writeDigit(bridge->onBridge   % 100, 4);
-    writeDigit(bridge->onBridge   % 10,  5);
+    writeDigit(bridge->northQueue % 100 / 10, 0);
+    writeDigit(bridge->northQueue % 10,       1);
+    writeDigit(bridge->southQueue % 100 / 10, 2);
+    writeDigit(bridge->southQueue % 10,       3);
+    writeDigit(bridge->onBridge   % 100 / 10, 4);
+    writeDigit(bridge->onBridge   % 10,       5);
 
     return 0;
 }
