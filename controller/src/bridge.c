@@ -33,6 +33,8 @@ int process(Bridge *const self, const int arg) {
         self->southQueue++;
     // Other cases ignored.
 
+    SYNC(self->display, print, self);
+
     return 0;
 }
 
@@ -40,7 +42,21 @@ int leave(Bridge *const self, __attribute__((unused)) const int _x) {
     assert(self->onBridge);
     self->onBridge--;
 
+    SYNC(self->display, print, self);
+
     return 0;
+}
+
+static void checkSwitch(Bridge *const self) {
+    if (self->state == OPEN_NORTH && self->southQueue) {
+        self->passed = 0;
+        self->state = CLOSED_NORTH;
+        SYNC(self->writer, send, BOTH_RED);
+    } else if (self->state == OPEN_SOUTH && self->northQueue) {
+        self->passed = 0;
+        self->state = CLOSED_SOUTH;
+        SYNC(self->writer, send, BOTH_RED);
+    }
 }
 
 static void enter(Bridge *const self) {
@@ -55,21 +71,8 @@ static void enter(Bridge *const self) {
         self->northQueue--;
         SYNC(self->writer, send, NORTH_GREEN);
     }
-}
 
-static void checkSwitch(Bridge *const self) {
-    if (self->passed < PASS_THRESHOLD)
-        return;
-
-    if (self->state == OPEN_NORTH && self->southQueue) {
-        self->passed = 0;
-        self->state = CLOSED_NORTH;
-        SYNC(self->writer, send, BOTH_RED);
-    } else if (self->state == OPEN_SOUTH && self->northQueue) {
-        self->passed = 0;
-        self->state = CLOSED_SOUTH;
-        SYNC(self->writer, send, BOTH_RED);
-    }
+    SYNC(self->display, print, self);
 }
 
 static void emptyBridge(Bridge *const self) {
@@ -106,19 +109,15 @@ static void goingSouth(Bridge *const self) {
 }
 
 int poll(Bridge *const self, __attribute__((unused)) const int _x) {
-    checkSwitch(self);
-
-    if (!self->onBridge) 
+    if (self->passed >= PASS_THRESHOLD)
+        checkSwitch(self);
+    else if (!self->onBridge) 
         emptyBridge(self);
     else if (self->state == OPEN_NORTH)
         goingNorth(self);
     else if (self->state == OPEN_SOUTH)
         goingSouth(self);
-    else
-        assert(false);
 
-    // TODO: `print` doesn't always have to be called here.
-    SYNC(self->display, print, self);
     AFTER(POLL_TIME, self, poll, 0);
 
     return 0;
