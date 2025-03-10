@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <assert.h>
+#include <stdio.h>
 #include "bridge.h"
 #include "ui.h"
 
