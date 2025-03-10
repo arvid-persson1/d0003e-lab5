@@ -21,11 +21,15 @@ int main(const int argc, const char *const argv[]) {
 
     State state = { bridge, PTHREAD_MUTEX_INITIALIZER };
 
+    printf("startup\n");
+
     pthread_t receiverThread;
     Handler handler = { fd, process, (void*)&state };
     int err = pthread_create(&receiverThread, NULL, &recv, (void*)&handler);
     // No attributes, assume system resources are sufficient.
     assert(err == 0);
+
+    printf("started listener thread\n");
 
     input(fd, &state);
 

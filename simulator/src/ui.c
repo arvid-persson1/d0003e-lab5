@@ -21,21 +21,26 @@ void print(const Bridge bridge) {
 
 void input(int fd, State *const state) {
     while (true) {
+        char c = getchar();
+        printf("read %c\n", c);
         switch (getchar()) {
             case 'n':
                 pthread_mutex_lock(&state->lock);
                 state->bridge.northQueue++;
                 pthread_mutex_unlock(&state->lock);
+                printf("sending north arrival\n");
                 send(fd, NORTH_ARRIVAL);
                 break;
             case 's':
                 pthread_mutex_lock(&state->lock);
                 state->bridge.southQueue++;
                 pthread_mutex_unlock(&state->lock);
+                printf("sending south arrival\n");
                 send(fd, SOUTH_ARRIVAL);
                 break;
             case 'e':
                 close(fd);
+                printf("exiting\n");
                 exit(0);
             default:
                 perror("unknown command");

@@ -97,6 +97,8 @@ int openPort(const char *const port) {
         exit(1);
     }
 
+    printf("fd setup finished\n");
+
     return fd;
 }
 
@@ -113,11 +115,15 @@ void initStdin(void) {
         perror("signal interrupt on stdin");
         exit(1);
     }
+
+    printf("stdin setup finished\n");
 }
 
 void send(const int fd, const uint8_t data) {
+    printf("sending %d\n", data);
     int res = write(fd, &data, sizeof(data));
     assert(res == 1);
+    printf("sent %d\n", data);
 }
 
 void *recv(void *arg) {
@@ -127,9 +133,12 @@ void *recv(void *arg) {
     while (true) {
         int res = read(handler.fd, &buf, sizeof(buf));
         assert(res == sizeof(buf));
+        printf("received %d\n", buf);
 
         Response response = handler.function(handler.arg, buf);
-        if (response.set)
+        if (response.set) {
+            printf("got response, sending\n");
             send(handler.fd, response.msg);
+        }
     }
 }

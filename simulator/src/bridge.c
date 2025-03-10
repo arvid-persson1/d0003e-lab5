@@ -3,9 +3,14 @@
 #include "bridge.h"
 #include "ui.h"
 
+#define DRIVE_TIME 5
+
 static void *leave(void *arg) {
     State *state = (State*)arg;
-    sleep(5);
+    
+    printf("car enters bridge\n");
+    sleep(DRIVE_TIME);
+    printf("car leaves bridge\n");
 
     pthread_mutex_lock(&state->lock);
     state->bridge.onBridge--;
@@ -59,14 +64,17 @@ Response process(void *arg, const uint8_t data) {
 
     int *queue;
     if (status.northGreen) {
+        printf("north light green\n");
         queue = &state->bridge.northQueue;
         response = RESPONSE(NORTH_ENTRY);
         deferLeave(state);
     } else if (status.southGreen) {
+        printf("south light green\n");
         queue = &state->bridge.southQueue;
         response = RESPONSE(SOUTH_ENTRY);
         deferLeave(state);
     } else {
+        printf("lights red\n");
         queue = NULL;
         response = NO_RESPONSE;
     }
