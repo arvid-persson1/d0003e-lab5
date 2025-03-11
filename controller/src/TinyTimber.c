@@ -231,7 +231,7 @@ TIMER_COMPARE_INTERRUPT {
 }
 
 /* context switching */
-static void dispatch( Thread next ) {
+static void dispatch( volatile Thread next ) {
     if (setjmp( current->context ) == 0) {
         current = next;
         longjmp( next->context, 1 );
