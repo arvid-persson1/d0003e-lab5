@@ -9,10 +9,9 @@ int main() {
     Writer  w = initWriter();
     Display d = initDisplay();
     Bridge  b = initBridge(&w, &d);
-    InterruptHandler h = initHandler(&w, &b);
 
+    InterruptHandler h = initHandler(&b);
     INSTALL(&h, recv, IRQ_USART0_RX);
-    INSTALL(&h, drempty, IRQ_USART0_UDRE);
 
     return TINYTIMBER(&b, poll, 0);
 }

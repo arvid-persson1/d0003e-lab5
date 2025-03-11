@@ -64,7 +64,7 @@ static void enter(Bridge *const self) {
 }
 
 int poll(Bridge *const self, __attribute__((unused)) const int _x) {
-    bool switchReady = self->passed < PASS_THRESHOLD;
+    bool switchReady = self->passed >= PASS_THRESHOLD;
     unsigned int *activeQueue, *waitQueue;
     if (self->direction == SOUTH) {
         activeQueue = &self->southQueue;
@@ -76,13 +76,15 @@ int poll(Bridge *const self, __attribute__((unused)) const int _x) {
 
     if (!self->onBridge) {
         if (self->southQueue && (!self->northQueue || self->direction == NORTH)) {
+            if (self->direction == NORTH)
+                self->passed = 1;
             self->direction = SOUTH;
-            self->passed = 1;
             self->open = true;
             enter(self);
         } else if (self->northQueue && (!self->southQueue || self->direction == SOUTH)) {
+            if (self->direction == SOUTH)
+                self->passed = 1;
             self->direction = NORTH;
-            self->passed = 1;
             self->open = true;
             enter(self);
         }
@@ -94,9 +96,6 @@ int poll(Bridge *const self, __attribute__((unused)) const int _x) {
     } else if (self->open && *activeQueue && (!switchReady || !*waitQueue)) { // TODO: remove unnecessary check at the end
         self->passed++;
         enter(self);
-    } else {
-        // TODO: are there other cases?
-        assert(!self->onBridge && (!self->open || !*activeQueue));
     }
 
     AFTER(POLL_TIME, self, poll, 0);

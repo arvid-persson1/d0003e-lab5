@@ -45,10 +45,10 @@ int print(__attribute__((unused)) const Display *const self, const int arg) {
 
     writeDigit(bridge->northQueue % 100 / 10, 0);
     writeDigit(bridge->northQueue % 10,       1);
-    writeDigit(bridge->southQueue % 100 / 10, 2);
-    writeDigit(bridge->southQueue % 10,       3);
-    writeDigit(bridge->onBridge   % 100 / 10, 4);
-    writeDigit(bridge->onBridge   % 10,       5);
+    writeDigit(bridge->onBridge   % 100 / 10, 2);
+    writeDigit(bridge->onBridge   % 10,       3);
+    writeDigit(bridge->southQueue % 100 / 10, 4);
+    writeDigit(bridge->southQueue % 10,       5);
 
     return 0;
 }

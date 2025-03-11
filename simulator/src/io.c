@@ -7,8 +7,8 @@
 #include <termios.h>
 #include <fcntl.h>
 
+// TODO: many of these are unnecessary and/or already set.
 void setFlags(__attribute__((unused)) struct termios *const tty) {
-    /*
     tty->c_cflag &= ~CSIZE;
     tty->c_cflag &= ~PARENB;
     tty->c_cflag &= ~CSTOPB;
@@ -18,9 +18,7 @@ void setFlags(__attribute__((unused)) struct termios *const tty) {
     tty->c_cflag |= CLOCAL;
     tty->c_cflag |= HUPCL;
     tty->c_cflag |= INPCK;
-    */
-
-    /*
+    
     tty->c_iflag &= ~IGNBRK;
     tty->c_iflag &= ~BRKINT;
     tty->c_iflag &= ~ICRNL;
@@ -29,28 +27,21 @@ void setFlags(__attribute__((unused)) struct termios *const tty) {
     tty->c_iflag &= ~INPCK;
     tty->c_iflag &= ~ISTRIP;
     tty->c_iflag &= ~IXON;
-    */
-
-    /*
+    
     tty->c_oflag = 0;
-    */
-
-    /*
+    
     tty->c_lflag &= ~ ECHO;
     tty->c_lflag &= ~ ECHONL;
     tty->c_lflag &= ~ ICANON;
     tty->c_lflag &= ~ IEXTEN;
     tty->c_lflag &= ~ ISIG;
-    */
-
-    /*
+    
     tty->c_cc[VMIN]  = 1;
     tty->c_cc[VTIME] = 0; // 10?
-    */
 }
 
 int openPort(const char *const port) {
-    int fd = open(port, O_RDWR /* | O_NOCTTY | O_NDELAY */);
+    int fd = open(port, O_RDWR | O_NOCTTY /*| O_NDELAY */);
     if (fd < 0) {
         perror("failed to open port");
         exit(1);
@@ -97,8 +88,6 @@ int openPort(const char *const port) {
         exit(1);
     }
 
-    printf("fd setup finished\n");
-
     return fd;
 }
 
@@ -115,15 +104,11 @@ void initStdin(void) {
         perror("signal interrupt on stdin");
         exit(1);
     }
-
-    printf("stdin setup finished\n");
 }
 
 void send(const int fd, const uint8_t data) {
-    printf("sending %d\n", data);
     int res = write(fd, &data, sizeof(data));
-    assert(res == 1);
-    printf("sent %d\n", data);
+    assert(res == sizeof(data));
 }
 
 void *recv(void *arg) {
@@ -133,11 +118,9 @@ void *recv(void *arg) {
     while (true) {
         int res = read(handler.fd, &buf, sizeof(buf));
         assert(res == sizeof(buf));
-        printf("received %d\n", buf);
 
         Response response = handler.function(handler.arg, buf);
         if (response.set) {
-            printf("got response, sending\n");
             send(handler.fd, response.msg);
         }
     }

@@ -1,7 +1,7 @@
 COMPILER := gcc
 FLAGS := -W -Wall -Wextra -Werror -pedantic -std=c23 -pthread
 DEBUG_FLAGS := -g -O0
-RELEASE_FLAGS := -O3
+RELEASE_FLAGS := -O3 -DNDEBUG -Wno-unused-but-set-variable -Wno-unused-variable
 
 SRC_DIR := ./src
 TARGET_DIR := ../target/simulator

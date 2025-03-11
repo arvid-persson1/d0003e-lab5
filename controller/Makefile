@@ -1,7 +1,7 @@
 COMPILER := avr-gcc
 FLAGS := -W -Wall -Wextra -Werror -pedantic -std=c23 -mmcu=atmega169 -Wno-unused-but-set-variable -Wno-parentheses #-Wno-unused-variable -Wno-unused-parameter
 DEBUG_FLAGS := -g -O0
-RELEASE_FLAGS := -O3
+RELEASE_FLAGS := -O3 -Wno-clobbered
 
 SRC_DIR := ./src
 TARGET_DIR := ../target/controller

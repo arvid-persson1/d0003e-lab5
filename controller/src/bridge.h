@@ -1,6 +1,7 @@
 #ifndef _BRIDGE_H
 #define _BRIDGE_H
 
+#include <stdint.h>
 #include "TinyTimber.h"
 #include "writer.h"
 #include "display.h"

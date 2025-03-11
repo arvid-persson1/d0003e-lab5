@@ -1,8 +1,8 @@
 #include "common.h"
 
-#define FOSC 8000000
-#define BAUD 9600
-#define UBRRVAL (FOSC / (16UL * BAUD) - 1)
+#define FOSC 8000000UL
+#define BAUD 9600UL
+#define UBRRVAL (FOSC / (16UL * BAUD) - 1UL)
 
 // TODO: read status bits (FE, DOR, RXB8) before UDR reg
 // CHR9 -> UCSZ2, OR -> DOR
