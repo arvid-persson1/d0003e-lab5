@@ -29,7 +29,8 @@ int process(Bridge *const self, const int arg) {
         self->southQueue++;
     // Other cases ignored.
 
-    ASYNC(self->display, print, self);
+    int err = SYNC(self->display, print, self);
+    assert(err == 0);
 
     return 0;
 }
@@ -38,25 +39,28 @@ int leave(Bridge *const self, __attribute__((unused)) const int _x) {
     assert(self->onBridge);
     self->onBridge--;
 
-    ASYNC(self->display, print, self);
+    int err = SYNC(self->display, print, self);
+    assert(err == 0);
 
     return 0;
 }
 
 static void enter(Bridge *const self) {
-    self->open = true;
     self->onBridge++;
     AFTER(DRIVE_TIME, self, leave, 0);
 
+    int err;
     if (self->direction == NORTH) {
         self->northQueue--;
-        ASYNC(self->writer, send, NORTH_GREEN);
+        err = SYNC(self->writer, send, NORTH_GREEN);
     } else {
         self->southQueue--;
-        ASYNC(self->writer, send, SOUTH_GREEN);
+        err = SYNC(self->writer, send, SOUTH_GREEN);
     }
+    assert(err == 0);
 
-    ASYNC(self->display, print, self);
+    err = SYNC(self->display, print, self);
+    assert(err == 0);
 }
 
 int poll(Bridge *const self, __attribute__((unused)) const int _x) {
@@ -71,20 +75,23 @@ int poll(Bridge *const self, __attribute__((unused)) const int _x) {
     }
 
     if (!self->onBridge) {
-        if (!self->northQueue || self->direction == NORTH && self->southQueue) {
+        if (self->southQueue && (!self->northQueue || self->direction == NORTH)) {
             self->direction = SOUTH;
             self->passed = 1;
+            self->open = true;
             enter(self);
-        } else if (!self->southQueue || self->direction == SOUTH && self->northQueue) {
+        } else if (self->northQueue && (!self->southQueue || self->direction == SOUTH)) {
             self->direction = NORTH;
             self->passed = 1;
+            self->open = true;
             enter(self);
         }
         // both sides empty, pass
     } else if (switchReady && *waitQueue) {
         self->open = false;
-        ASYNC(self->writer, send, BOTH_RED);
-    } else if (self->open && *activeQueue && (!switchReady || !*waitQueue)) {
+        int err = SYNC(self->writer, send, BOTH_RED);
+        assert(err == 0);
+    } else if (self->open && *activeQueue && (!switchReady || !*waitQueue)) { // TODO: remove unnecessary check at the end
         self->passed++;
         enter(self);
     } else {

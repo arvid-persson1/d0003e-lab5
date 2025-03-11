@@ -6,7 +6,7 @@
 #if defined(__OPTIMIZE__) && __OPTIMIZE__ > 2
     #define assert(x) { if (!(x)) __builtin_unreachable(); }
 #else
-    #define assert(x) { if (!(x)) while (1); }
+    #define assert(x) { if (!(x)) { LCDDR0 = 0xFF; while (1); } }
 #endif
 
 #ifndef UDR
